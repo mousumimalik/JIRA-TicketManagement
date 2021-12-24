@@ -88,7 +88,7 @@ body {
 
 .ticket-color {
     height: 1rem;
-    background-color: lightpink;
+    /* background-color: lightpink; */
 }
 
 .ticket-id {
@@ -97,8 +97,18 @@ body {
 }
 
 .task-area {
-    height: calc(100% - 1rem - 2rem);
+    height: calc(100% - 1rem - 2rem - 2rem);
     padding: 0.4rem;
+    outline: none;
+}
+
+.ticket-lock {
+    height: 2rem;
+    display: flex;
+    justify-content: flex-end;
+    font-size: 1.5rem;
+    padding-right: 1rem;
+    color: #bdc3c7;
 }
 
 /* MODAL CONTAINER */
