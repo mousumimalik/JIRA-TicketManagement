@@ -17,6 +17,14 @@ let unlockClass = "fa-unlock-alt";
 
 let ticketArr = [];
 
+if(localStorage.getItem("jira_tickets")) {
+    // retrive & display tickets
+    ticketArr = JSON.parse(localStorage.getItem("jira_tickets"));
+    ticketArr.forEach((ticketObj) => {
+        createTicket(ticketObj.ticketColor, ticketObj.ticketTask, ticketObj.ticketID);
+    });
+}
+
 // TOOLBOX COLORS
 for(let i = 0; i < toolboxColors.length; i++) {
     toolboxColors[i].addEventListener("click", (e) => {
@@ -113,26 +121,44 @@ function createTicket(ticketColor, ticketTask, ticketID) {
     mainCont.appendChild(ticketCont);
 
     // create obj of ticket & add to array
-    if(!ticketID) ticketArr.push({ticketColor, ticketTask, ticketID: id});
+    // if(!ticketID) ticketArr.push({ticketColor, ticketTask, ticketID: id});
+    if(!ticketID) {
+        ticketArr.push({ticketColor, ticketTask, ticketID: id});
+        localStorage.setItem("jira_tickets", JSON.stringify(ticketArr));
+    }
 
-    handleRemoval(ticketCont);
-    handleLock(ticketCont);
-    handleColor(ticketCont);
+    console.log(ticketArr);
+    handleRemoval(ticketCont, id);
+    handleLock(ticketCont, id);
+    handleColor(ticketCont, id);
 }
 
 // REMOVE
-function handleRemoval(ticket) {
+function handleRemoval(ticket, id) {
     // removeFlag - true -> remove
-    if(removeFlag) ticket.remove();
+    // if(removeFlag) ticket.remove();
+    ticket.addEventListener("click", (e) => {
+        if(!removeFlag) return;
+
+        let idx = getTicketIdx(id);
+
+        ticketArr.splice(idx, 1); // DB removal
+        let strTicketsArr = JSON.stringify(ticketArr);
+        localStorage.setItem("jira_tickets", strTicketsArr);
+
+        ticket.remove(); // UI removal
+    });
 }
 
 // LOCK & UNLOCK
-function handleLock(ticket) {
+function handleLock(ticket, id) {
     let ticketLockElem = ticket.querySelector(".ticket-lock");
     let ticketLock = ticketLockElem.children[0];
     let ticketTaskArea = ticket.querySelector(".task-area");
 
     ticketLock.addEventListener("click", (e) => {
+        let ticketIdx = getTicketIdx(id);
+
         if(ticketLock.classList.contains(lockClass)) {
             ticketLock.classList.remove(lockClass);
             ticketLock.classList.add(unlockClass);
@@ -143,14 +169,22 @@ function handleLock(ticket) {
             ticketLock.classList.add(lockClass);
             ticketTaskArea.setAttribute("contenteditable", "false");
         }
+
+        // modify data in local storage | ticket task
+        ticketArr[ticketIdx].ticketTask = ticketTaskArea.innerText;
+        localStorage.setItem("jira_tickets", JSON.stringify(ticketArr));
     });
 }
 
+
 // COLOR HANDLER
-function handleColor(ticket) {
+function handleColor(ticket, id) {
     let ticketColor = ticket.querySelector(".ticket-color");
 
     ticketColor.addEventListener("click", (e) => {
+        // get ticketIdx from the tickets array
+        let ticketIdx = getTicketIdx(id);
+
         let currentTicketColor = ticketColor.classList[1];
 
         // get ticket color index
@@ -162,7 +196,18 @@ function handleColor(ticket) {
         let newTicketColor = colors[newTicketColorIdx];
         ticketColor.classList.remove(currentTicketColor);
         ticketColor.classList.add(newTicketColor);
+
+        // modify data in local storage | priority color change
+        ticketArr[ticketIdx].ticketColor = newTicketColor;
+        localStorage.setItem("jira_tickets", JSON.stringify(ticketArr));
     });
+}
+
+function getTicketIdx(id) {
+    let ticketIdx = ticketArr.findIndex((ticketObj) => {
+        return ticketObj.ticketID === id;
+    });
+    return ticketIdx;
 }
 
 // DEFAULT COLOR BORDER SET | SET MODAL
